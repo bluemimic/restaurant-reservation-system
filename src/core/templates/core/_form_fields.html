@@ -1,0 +1,31 @@
+{% load i18n %}
+
+{% if form.non_field_errors %}
+<div class="mb-3">
+    {% for err in form.non_field_errors %}
+    <div class="alert alert-danger">{{ err }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if next %}
+<input type="hidden" name="next" value="{{ next }}" style="display: none;">
+{% endif %}
+
+{% for field in form.hidden_fields %}
+{{ field }}
+{% endfor %}
+
+{% for field in form.visible_fields %}
+<div class="mb-3">
+    {{ field.label }}:
+    {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+    {{ field }}
+    {% if field.help_text %}
+    <div class="form-text">{{ field.help_text }}</div>
+    {% endif %}
+    {% for error in field.errors %}
+    <div class="invalid-feedback d-block">{{ error }}</div>
+    {% endfor %}
+</div>
+{% endfor %}

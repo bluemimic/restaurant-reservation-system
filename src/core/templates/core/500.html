@@ -1,0 +1,11 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Server Error (500)" %}{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+  <h1 class="display-4">{% blocktranslate %}500 - Server Error{% endblocktranslate %}</h1>
+  <p class="lead">{% translate "Sorry - something went wrong on our end." %}</p>
+</div>
+{% endblock %}

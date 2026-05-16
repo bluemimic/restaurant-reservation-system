@@ -1,0 +1,11 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Forbidden (403)" %}{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+  <h1 class="display-4">{% blocktranslate %}403 - Forbidden{% endblocktranslate %}</h1>
+  <p class="lead">{% translate "Access denied!" %}</p>
+</div>
+{% endblock %}

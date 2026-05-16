@@ -1,0 +1,19 @@
+{% load i18n %}
+<div id="messages" class="alerts-bottom-right" hx-swap-oob="true">
+    {% for message in messages %}
+        {% if 'error' in message.tags %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {% elif 'warning' in message.tags %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        {% elif 'success' in message.tags %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {% elif 'info' in message.tags %}
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+        {% else %}
+            <div class="alert alert-secondary alert-dismissible fade show" role="alert">
+        {% endif %}
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% translate 'Close' %}"></button>
+            </div>
+    {% endfor %}
+</div>

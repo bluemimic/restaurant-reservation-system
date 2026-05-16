@@ -1,0 +1,11 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Page Not Found (404)" %}{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+  <h1 class="display-4">{% blocktranslate %}404 - Page Not Found{% endblocktranslate %}</h1>
+  <p class="lead">{% translate "The page you requested doesn't exist or may have been moved." %}</p>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+-r base.txt
+
+mypy==2.1.0
+ruff==0.15.13
+
+django-stubs==6.0.4
+
+debugpy==1.8.20
+
+whitenoise==6.12.0

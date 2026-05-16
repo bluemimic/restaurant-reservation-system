@@ -1,0 +1,17 @@
+services:
+
+  django:
+    build:
+      context: .
+      dockerfile: docker/local.Dockerfile
+    container_name: django-dev
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    networks: [backend]
+
+networks:
+  backend:
