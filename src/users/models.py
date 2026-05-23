@@ -1,5 +1,6 @@
 # mypy: disable-error-code="assignment"
 
+
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.auth.models import BaseUserManager as BUM
 from django.db import models
@@ -35,6 +36,7 @@ class BaseUserManager(BUM):
 
         if password is not None:
             user.set_password(password)
+
         else:
             user.set_unusable_password()
 
@@ -60,13 +62,11 @@ class BaseUserManager(BUM):
         return user
 
 
-class BaseUser(SoftDeleteModel, BaseModel, AbstractBaseUser, PermissionsMixin):
+class Restaurant(SoftDeleteModel, BaseModel, AbstractBaseUser, PermissionsMixin):
     name: Field = models.CharField(
-        max_length=255, null=False, blank=False, verbose_name=_("Name"), help_text=_("The name of the user.")
+        max_length=255, null=False, blank=False, verbose_name=_("Name"), help_text=_("The name of the restaurant.")
     )
-    surname: Field = models.CharField(
-        max_length=255, null=False, blank=False, verbose_name=_("Surname"), help_text=_("The surname of the user.")
-    )
+
     email: Field = models.EmailField(
         validators=[
             CustomEmailValidator(),
@@ -81,9 +81,11 @@ class BaseUser(SoftDeleteModel, BaseModel, AbstractBaseUser, PermissionsMixin):
             "unique": _("A user with this email already exists."),
         },
     )
+
     username: Field = models.CharField(
         max_length=255, null=False, blank=False, verbose_name=_("Username"), help_text=_("The username of the user.")
     )
+
     password: Field = models.CharField(
         max_length=255,
         null=False,
@@ -99,25 +101,18 @@ class BaseUser(SoftDeleteModel, BaseModel, AbstractBaseUser, PermissionsMixin):
         null=False,
         blank=False,
     )
-    is_admin: Field = models.BooleanField(
-        default=False,
-        verbose_name=_("Is admin?"),
-        help_text=_("Designates whether the user has admin privileges."),
-        null=False,
-        blank=False,
-    )
 
     USERNAME_FIELD = "email"
     EMAIL_FIELD = "email"
-    REQUIRED_FIELDS = ["username", "name", "surname", "password"]
+    REQUIRED_FIELDS = ["username", "name", "password"]
 
     objects = BaseUserManager()
 
     def __str__(self):
-        return f"{self.name} {self.surname} ({self.email})"
+        return f"{self.name} ({self.email})"
 
     def get_full_name(self) -> str:
-        return f"{self.name} {self.surname}"
+        return f"{self.name}"
 
     class Meta:
         verbose_name = _("User")
