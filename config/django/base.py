@@ -37,6 +37,8 @@ LOCAL_APPS = [
     "src.core.apps.CoreConfig",
     "src.common.apps.CommonConfig",
     "src.home.apps.HomeConfig",
+    "src.reservations.apps.ReservationsConfig",
+    "src.offers.apps.OffersConfig",
 ]
 
 THIRD_PARTY_APPS = [
@@ -122,7 +124,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = "users.BaseUser"
+AUTH_USER_MODEL = "users.Restaurant"
 ROLEPERMISSIONS_MODULE = "src.core.roles"
 
 LOGIN_URL = "/auth/login/"
