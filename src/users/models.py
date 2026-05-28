@@ -82,10 +82,6 @@ class Restaurant(SoftDeleteModel, BaseModel, AbstractBaseUser, PermissionsMixin)
         },
     )
 
-    username: Field = models.CharField(
-        max_length=255, null=False, blank=False, verbose_name=_("Username"), help_text=_("The username of the user.")
-    )
-
     password: Field = models.CharField(
         max_length=255,
         null=False,
