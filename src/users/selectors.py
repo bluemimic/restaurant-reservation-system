@@ -1,10 +1,13 @@
-from src.common.utils import get_object_or_none
-from src.users.models import Restaurant
-from src.core.exceptions import NotFoundError
+from uuid import UUID
 
 from django.db.models import QuerySet
+from django.utils.translation import gettext_lazy as _
 from django_filters import FilterSet
-from uuid import UUID
+
+from src.common.utils import get_object_or_none
+from src.core.exceptions import NotFoundError
+
+from .models import Restaurant
 
 class RestaurantFilterSet(FilterSet):
     class Meta:

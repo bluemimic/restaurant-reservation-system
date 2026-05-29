@@ -39,6 +39,13 @@ class Reservation(BaseModel):
         help_text=_("The offer associated with this reservation, if any"),
     )
 
+    restaurant: models.ForeignKey = models.ForeignKey(
+        "users.Restaurant",
+        on_delete=models.CASCADE,
+        verbose_name=_("Restaurant"),
+        help_text=_("Restaurant offering the deal"),
+    )
+
     portions_reserved: models.IntegerField = models.IntegerField(
         null=False,
         blank=False,
