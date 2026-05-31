@@ -15,11 +15,8 @@ class BaseUserManager(BUM):
     def create_user(
         self,
         email: str,
-        username: str,
         name: str,
-        surname: str,
         is_active: bool = True,
-        is_admin: bool = False,
         password: str | None = None,
     ):
         if not email:
@@ -27,16 +24,12 @@ class BaseUserManager(BUM):
 
         user = self.model(
             email=self.normalize_email(email.lower()),
-            username=username,
             name=name,
-            surname=surname,
             is_active=is_active,
-            is_admin=is_admin,
         )
 
         if password is not None:
             user.set_password(password)
-
         else:
             user.set_unusable_password()
 
@@ -45,14 +38,11 @@ class BaseUserManager(BUM):
 
         return user
 
-    def create_superuser(self, email: str, name: str, surname: str, username: str, password: str | None = None):
+    def create_superuser(self, email: str, name: str, password: str | None = None):
         user = self.create_user(
             email=email,
-            username=username,
             name=name,
-            surname=surname,
             is_active=True,
-            is_admin=True,
             password=password,
         )
 
@@ -82,10 +72,6 @@ class Restaurant(SoftDeleteModel, BaseModel, AbstractBaseUser, PermissionsMixin)
         },
     )
 
-    username: Field = models.CharField(
-        max_length=255, null=False, blank=False, verbose_name=_("Username"), help_text=_("The username of the user.")
-    )
-
     password: Field = models.CharField(
         max_length=255,
         null=False,
@@ -104,7 +90,7 @@ class Restaurant(SoftDeleteModel, BaseModel, AbstractBaseUser, PermissionsMixin)
 
     USERNAME_FIELD = "email"
     EMAIL_FIELD = "email"
-    REQUIRED_FIELDS = ["username", "name", "password"]
+    REQUIRED_FIELDS = ["name"]
 
     objects = BaseUserManager()
 

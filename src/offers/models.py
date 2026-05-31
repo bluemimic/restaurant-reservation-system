@@ -77,6 +77,7 @@ class Offer(BaseModel):
         help_text=_("Restaurant offering the deal"),
     )
 
+
     class Meta:
         verbose_name = _("Offer")
         verbose_name_plural = _("Offers")
