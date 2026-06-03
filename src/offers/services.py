@@ -27,7 +27,7 @@ class OfferService:
     INVALID_PORTIONS_MESSAGE = _("Portions available cannot be negative.")
 
     def _check_is_owner(self, offer: Offer) -> None:
-        if offer.restaurant_id != self.performed_by.id:
+        if offer.restaurant.id != self.performed_by.id:
             logger.error(f"Restaurant {self.performed_by.id} attempted to modify offer {offer.id} they don't own.")
             raise ApplicationError(self.NOT_OWNER_MESSAGE)
 

@@ -1,0 +1,23 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+  <h1>Reservations</h1>
+
+  <form method="get" class="mb-3">
+    {% include 'core/_filters.html' %}
+  </form>
+
+  <ul class="list-group">
+    {% for reservation in page_obj.object_list %}
+      <li class="list-group-item">
+        <a href="{% url 'reservations:detail' id=reservation.id %}">{{ reservation.client_name }}</a>
+        — {{ reservation.reservation_status }}
+      </li>
+    {% empty %}
+      <li class="list-group-item">No reservations found.</li>
+    {% endfor %}
+  </ul>
+
+  {% include 'core/_paginator.html' with page_obj=page_obj querystring=querystring %}
+
+{% endblock %}

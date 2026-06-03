@@ -1,9 +1,9 @@
 from uuid import UUID
 
+import django_filters
 from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from django_filters import FilterSet
-import django_filters
 
 from src.common.utils import get_object_or_none
 from src.core.exceptions import NotFoundError

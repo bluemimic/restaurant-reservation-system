@@ -1,0 +1,21 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+  <h1>{{ offer.name }}</h1>
+
+  {% if offer.image %}
+    <img src="{{ offer.image.url }}" alt="{{ offer.name }}" class="img-fluid mb-3">
+  {% endif %}
+
+  <p>{{ offer.description }}</p>
+  <p><strong>Price:</strong> {{ offer.price }}</p>
+  <p><strong>Portions available:</strong> {{ offer.portions_available }}</p>
+
+  {% if user.is_authenticated %}
+    <a class="btn btn-secondary" href="{% url 'offers:edit' id=offer.id %}">Edit</a>
+    <form method="post" action="{% url 'offers:delete' id=offer.id %}" style="display:inline">{% csrf_token %}
+      <button type="submit" class="btn btn-danger">Delete</button>
+    </form>
+  {% endif %}
+
+{% endblock %}

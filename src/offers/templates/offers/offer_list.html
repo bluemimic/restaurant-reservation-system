@@ -1,0 +1,30 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+  <h1>Offers</h1>
+
+  <form method="get" class="mb-3">
+    {% include 'core/_filters.html' %}
+  </form>
+
+  <div class="row">
+    {% for offer in page_obj.object_list %}
+      <div class="col-md-4 mb-3">
+        <div class="card">
+          {% if offer.image %}
+            <img src="{{ offer.image.url }}" class="card-img-top" alt="{{ offer.name }}">
+          {% endif %}
+          <div class="card-body">
+            <h5 class="card-title"><a href="{% url 'offers:detail' id=offer.id %}">{{ offer.name }}</a></h5>
+            <p class="card-text">{{ offer.description|truncatechars:100 }}</p>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p>No offers found.</p>
+    {% endfor %}
+  </div>
+
+  {% include 'core/_paginator.html' with page_obj=page_obj querystring=querystring %}
+
+{% endblock %}

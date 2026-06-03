@@ -1,0 +1,161 @@
+from typing import Type
+
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.forms import BaseForm
+from django.shortcuts import redirect, render
+from django.utils.translation import gettext_lazy as _
+from django.views import View
+from rolepermissions.checkers import has_role
+
+from src.authentication.services import AuthService
+from src.common.mixins import (
+    HandleErrorsMixin,
+    RoleBasedAccessMixin,
+)
+from src.common.utils import bootstrapify_form, paginate_queryset, prepare_get_params
+from src.common.views import BaseFormView
+from src.core.roles import Administrator, Restaurant
+from src.users.forms import (
+    UserCreateAdminForm,
+    UserCreateForm,
+    UserEditAdminForm,
+    UserEditForm,
+)
+from src.users.selectors import RestaurantFilterSet, RestaurantSelectors
+from src.users.services import RestaurantService
+
+
+def _get_create_form(request) -> Type[BaseForm]:
+    if request.user.is_authenticated and has_role(request.user, Administrator):
+        return UserCreateAdminForm
+    return UserCreateForm
+
+
+def _get_edit_form(request) -> Type[BaseForm]:
+    if has_role(request.user, Administrator):
+        return UserEditAdminForm
+    return UserEditForm
+
+
+class UserCreateView(RoleBasedAccessMixin, BaseFormView):
+    template_name = "users/user_create.html"
+    required_roles = [Administrator]
+    allow_guests = True
+    success_message = _("User has been successfully created!")
+
+    def get_form_class(self, request, *args, **kwargs) -> Type[BaseForm]:
+        return _get_create_form(request)
+
+    def get_extra_context(self, request, form, *args, **kwargs) -> dict:
+        return {"registration": not request.user.is_authenticated}
+
+    def form_valid(self, request, form, *args, **kwargs):
+        user_service = RestaurantService(performed_by=request.user if request.user.is_authenticated else None)
+
+        user_service.create_restaurant(
+            name=form.cleaned_data["name"],
+            email=form.cleaned_data["email"],
+            password=form.cleaned_data["password"],
+            another_password=form.cleaned_data["another_password"],
+            is_superuser=form.cleaned_data.get("is_superuser", False),
+        )
+
+        messages.success(request, self.success_message)
+
+        if not has_role(request.user, Administrator):
+            return redirect("authentication:login")
+
+        return redirect("users:list")
+
+
+class UserEditView(LoginRequiredMixin, RoleBasedAccessMixin, BaseFormView):
+    template_name = "users/user_edit.html"
+    required_roles = [Administrator, Restaurant]
+    success_message = _("User has been successfully updated!")
+
+    def get_form_class(self, request, *args, **kwargs):
+        return _get_edit_form(request)
+
+    def get_instance(self, request, *args, **kwargs) -> object | None:
+        user_selectors = RestaurantSelectors(performed_by=request.user)
+
+        return user_selectors.get_restaurant_by_id(kwargs["id"])
+
+    def form_valid(self, request, form, *args, **kwargs):
+        user_service = RestaurantService(performed_by=request.user)
+        user_selectors = RestaurantSelectors(performed_by=request.user)
+
+        user = user_selectors.get_restaurant_by_id(kwargs.get("id"))
+
+        user = user_service.edit_restaurant(
+            id=kwargs.get("id"),
+            name=form.cleaned_data.get("name"),
+            email=form.cleaned_data.get("email"),
+            password=form.cleaned_data.get("password"),
+            another_password=form.cleaned_data.get("another_password"),
+            is_superuser=form.cleaned_data.get("is_superuser", False),
+        )
+
+        update_session_auth_hash(request, user)
+
+        messages.success(request, self.success_message)
+
+        return redirect("users:detail", id=kwargs.get("id"))
+
+
+class UserDetailView(LoginRequiredMixin, RoleBasedAccessMixin, HandleErrorsMixin, View):
+    template_name = "users/user_detail.html"
+    required_roles = [Administrator, Restaurant]
+
+    def get(self, request, *args, **kwargs):
+        requested_user_id = kwargs.get("id")
+
+        user_selectors = RestaurantSelectors(performed_by=request.user)
+        user = user_selectors.get_restaurant_by_id(requested_user_id)
+
+        return render(request, self.template_name, {"user": user})
+
+
+class UserListView(LoginRequiredMixin, RoleBasedAccessMixin, HandleErrorsMixin, View):
+    template_name = "users/user_list.html"
+    required_roles = [Administrator]
+
+    def get(self, request, *args, **kwargs):
+        user_selectors = RestaurantSelectors(performed_by=request.user)
+        users_qs = user_selectors.get_restaurants(filters=request.GET)
+
+        page_obj = paginate_queryset(request, users_qs, per_page=settings.PAGINATE_BY_DEFAULT)
+        querystring = prepare_get_params(request, exclude=["page"])
+        filter_form = bootstrapify_form(RestaurantFilterSet(request.GET).form)
+
+        context = {"page_obj": page_obj, "querystring": querystring}
+
+        context.update({"filter_form": filter_form})
+        return render(request, self.template_name, context)
+
+
+class UserDeleteView(LoginRequiredMixin, RoleBasedAccessMixin, HandleErrorsMixin, View):
+    required_roles = [Administrator, Restaurant]
+    success_message = _("User has been successfully deleted!")
+
+    def post(self, request, *args, **kwargs):
+        requested_user_id = kwargs.get("id")
+
+        current_user_id = request.user.id
+
+        user_service = RestaurantService(performed_by=request.user)
+        user_service.delete_restaurant(requested_user_id)
+
+        messages.success(request, self.success_message)
+
+        if has_role(request.user, Administrator):
+            return redirect("users:list")
+
+        if current_user_id == requested_user_id:
+            auth_service = AuthService(request=request)
+            auth_service.logout()
+
+        return redirect("home:index")
