@@ -1,0 +1,15 @@
+{% extends "core/base.html" %}
+
+{% block title %}User Detail{% endblock %}
+
+{% block content %}
+  <h1>User Detail</h1>
+  <div class="card">
+    <div class="card-body">
+      <p><strong>ID:</strong> {{ user.id }}</p>
+      <p><strong>Name:</strong> {{ user.name }}</p>
+      <p><strong>Email:</strong> {{ user.email }}</p>
+    </div>
+  </div>
+  <a href="{% url 'users:edit' id=user.id %}" class="btn btn-secondary mt-3">Edit</a>
+{% endblock %}

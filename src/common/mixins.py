@@ -1,22 +1,13 @@
 from django.contrib import messages
-from django.contrib.auth.mixins import AccessMixin, LoginRequiredMixin
+from django.contrib.auth.mixins import AccessMixin
 from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import redirect, render
+from django.shortcuts import render
 from django.utils.translation import gettext as _
 from rolepermissions.checkers import has_role
 from rolepermissions.roles import AbstractUserRole
 
 from src.common.utils import is_htmx_request
 from src.core.exceptions import ApplicationError, DomainError, NotFoundError, PermissionViolationError
-
-
-class VerifiedLoginRequiredMixin(LoginRequiredMixin):
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return self.handle_no_permission()
-        if not request.user.is_verified:
-            return redirect("users:verify")
-        return super().dispatch(request, *args, **kwargs)
 
 
 class RoleBasedAccessMixin(AccessMixin):

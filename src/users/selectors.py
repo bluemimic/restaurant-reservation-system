@@ -9,6 +9,7 @@ from src.core.exceptions import NotFoundError
 
 from .models import Restaurant
 
+
 class RestaurantFilterSet(FilterSet):
     class Meta:
         model = Restaurant

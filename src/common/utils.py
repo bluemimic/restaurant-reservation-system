@@ -1,8 +1,7 @@
-from typing import Any, Optional, Type
+from typing import Optional, Type
 
 from django.core.exceptions import ValidationError
 from django.core.paginator import Page, Paginator
-from django.db import models
 from django.db.models import QuerySet
 from django.forms import Form
 from django.forms.widgets import CheckboxInput, Select, SelectMultiple
@@ -100,3 +99,16 @@ def _is_unique_error(e: ValidationError) -> bool:
             if error.code in ("unique", "unique_together"):
                 return True
     return False
+
+
+def prepare_get_params(request, exclude: list[str] | None = None) -> str:
+    exclude = exclude or []
+    params = request.GET.copy()
+
+    for param in exclude:
+        if param in params:
+            params.pop(param)
+
+    querystring = params.urlencode()
+
+    return querystring

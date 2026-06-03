@@ -30,6 +30,10 @@ class ReservationService:
     NOT_FOUND_MESSAGE = _("Reservation not found.")
     WRONG_RESTAURANT_MESSAGE = _("This reservation does not belong to your restaurant.")
     INVALID_STATUS_TRANSITION_MESSAGE = _("This status change is not allowed.")
+    NOT_FOUND_MESSAGE = _("Reservation not found.")
+    OFFER_NOT_FOUND_MESSAGE = _("Offer not found.")
+    NOT_EDITABLE_MESSAGE = _("Only reservations in 'created' status can be modified.")
+    NOT_ENOUGH_PORTIONS_MESSAGE = _("Not enough portions available for this offer.")
 
     # Defines which statuses a restaurant is allowed to transition to
     ALLOWED_TRANSITIONS: dict[str, list[str]] = {
@@ -46,7 +50,8 @@ class ReservationService:
     }
 
     def _check_is_own_reservation(self, reservation: Reservation) -> None:
-        if reservation.restaurant_id != self.performed_by.id:
+        # Ensure the performing restaurant owns the reservation
+        if reservation.restaurant.id != self.performed_by.id:
             logger.error(
                 f"Restaurant {self.performed_by.id} attempted to modify "
                 f"reservation {reservation.id} belonging to another restaurant."
@@ -61,6 +66,14 @@ class ReservationService:
                 f"{reservation.reservation_status} -> {new_status}"
             )
             raise ApplicationError(self.INVALID_STATUS_TRANSITION_MESSAGE)
+
+    def _check_is_editable(self, reservation: Reservation) -> None:
+        if reservation.reservation_status != Reservation.ReservationStatus.CREATED:
+            raise ApplicationError(self.NOT_EDITABLE_MESSAGE)
+
+    def _check_portions_available(self, offer: Offer, requested: int) -> None:
+        if offer.portions_available < requested:
+            raise ApplicationError(self.NOT_ENOUGH_PORTIONS_MESSAGE)
 
     @transaction.atomic
     def change_status(self, id: UUID, new_status: str) -> Reservation:
@@ -78,29 +91,6 @@ class ReservationService:
         logger.info(f"Reservation {reservation.id} status changed to {new_status}")
 
         return reservation
-
-
-class ReservationService:
-    """
-    Used by anonymous visitors: create, edit, cancel a reservation.
-    No performed_by since visitors are not authenticated.
-    """
-
-    def __init__(self, base_service: BaseService[Reservation] | None = None) -> None:
-        self.base_service: BaseService[Reservation] = base_service or BaseService()
-
-    NOT_FOUND_MESSAGE = _("Reservation not found.")
-    OFFER_NOT_FOUND_MESSAGE = _("Offer not found.")
-    NOT_EDITABLE_MESSAGE = _("Only reservations in 'created' status can be modified.")
-    NOT_ENOUGH_PORTIONS_MESSAGE = _("Not enough portions available for this offer.")
-
-    def _check_is_editable(self, reservation: Reservation) -> None:
-        if reservation.reservation_status != Reservation.ReservationStatus.CREATED:
-            raise ApplicationError(self.NOT_EDITABLE_MESSAGE)
-
-    def _check_portions_available(self, offer: Offer, requested: int) -> None:
-        if offer.portions_available < requested:
-            raise ApplicationError(self.NOT_ENOUGH_PORTIONS_MESSAGE)
 
     @transaction.atomic
     def create_reservation(

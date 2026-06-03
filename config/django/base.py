@@ -39,6 +39,7 @@ LOCAL_APPS = [
     "src.home.apps.HomeConfig",
     "src.reservations.apps.ReservationsConfig",
     "src.offers.apps.OffersConfig",
+    "src.authentication.apps.AuthenticationConfig",
 ]
 
 THIRD_PARTY_APPS = [

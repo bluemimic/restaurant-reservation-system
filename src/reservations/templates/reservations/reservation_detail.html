@@ -1,0 +1,25 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+  <h1>Reservation {{ reservation.id }}</h1>
+
+  <dl class="row">
+    <dt class="col-sm-3">Client</dt>
+    <dd class="col-sm-9">{{ reservation.client_name }}</dd>
+
+    <dt class="col-sm-3">Table</dt>
+    <dd class="col-sm-9">{{ reservation.table_number }}</dd>
+
+    <dt class="col-sm-3">Status</dt>
+    <dd class="col-sm-9">{{ reservation.reservation_status }}</dd>
+
+    <dt class="col-sm-3">Offer</dt>
+    <dd class="col-sm-9">{% if reservation.offer %}{{ reservation.offer.name }}{% else %}-{% endif %}</dd>
+  </dl>
+
+  <a class="btn btn-secondary" href="{% url 'reservations:edit' id=reservation.id %}">Edit</a>
+  <form method="post" action="{% url 'reservations:delete' id=reservation.id %}" style="display:inline">{% csrf_token %}
+    <button type="submit" class="btn btn-danger">Cancel</button>
+  </form>
+
+{% endblock %}
