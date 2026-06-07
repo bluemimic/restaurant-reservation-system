@@ -1,12 +1,21 @@
 {% extends "core/base.html" %}
+{% load i18n %}
 
-{% block title %}Create User{% endblock %}
+{% block title %}{% translate "Add restaurant" %} — {% translate "Foodie" %}{% endblock %}
 
 {% block content %}
-  <h1>Create User</h1>
-  <form method="post" novalidate>
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Create</button>
-  </form>
+{% translate "Add restaurant" as page_title %}
+{% translate "Create login credentials for a new food court restaurant." as page_subtitle %}
+{% include 'core/_page_header.html' with title=page_title subtitle=page_subtitle %}
+
+<div class="form-panel">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% include 'core/_form_fields.html' with form=form %}
+        <div class="form-actions mb-0">
+            <button type="submit" class="btn btn-brand">{% translate "Create restaurant" %}</button>
+            <a class="btn btn-outline-secondary" href="{% url 'users:list' %}">{% translate "Cancel" %}</a>
+        </div>
+    </form>
+</div>
 {% endblock %}

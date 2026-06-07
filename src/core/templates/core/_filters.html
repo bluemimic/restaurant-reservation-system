@@ -1,19 +1,37 @@
 {% load i18n %}
 
 {% if filter_form %}
-    <div class="mb-3 row row-cols-lg-3 row-cols-md-2 row-cols-1 g-3">
-        {% for field in filter_form %}
-            <div class="col">
-                {{ field.label }}:
-                {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
-                {{ field }}
-                {% if field.help_text %}
-                <div class="form-text">{{ field.help_text }}</div>
-                {% endif %}
-                {% for error in field.errors %}
-                <div class="invalid-feedback d-block">{{ error }}</div>
-                {% endfor %}
-            </div>
-        {% endfor %}
+    <div class="filter-panel mb-4">
+        <h2 class="h5 mb-3">{% translate "Filter results" %}</h2>
+        <div class="filter-fields-grid" style="--filter-cols: {{ filter_form.fields|length }};">
+            {% for field in filter_form %}
+                <label class="form-label mb-0" for="{{ field.id_for_label }}" style="grid-column: {{ forloop.counter }}; grid-row: 1;">
+                    {{ field.label }}
+                    {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                </label>
+            {% endfor %}
+
+            {% for field in filter_form %}
+                <div style="grid-column: {{ forloop.counter }}; grid-row: 2;">
+                    {% if field.name == "price" %}
+                        <div class="price-range-filter{% if field.errors %} is-invalid-group{% endif %}">
+                            {% for subwidget in field.subwidgets %}
+                                {% if not forloop.first %}<span class="price-range-sep" aria-hidden="true">–</span>{% endif %}
+                                {{ subwidget }}
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ field.as_widget }}
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+        <div class="form-actions mb-0">
+            <button type="submit" class="btn btn-brand">{% translate "Apply filters" %}</button>
+            <a class="btn btn-outline-secondary" href="{{ request.path }}">{% translate "Clear" %}</a>
+        </div>
     </div>
 {% endif %}

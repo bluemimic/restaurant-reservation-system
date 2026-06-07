@@ -1,0 +1,60 @@
+{% extends 'core/base.html' %}
+{% load i18n %}
+
+{% block title %}{% translate "Reservations confirmed" %} — {% translate "Foodie" %}{% endblock %}
+
+{% block content %}
+{% translate "Reservations confirmed" as page_title %}
+{% blocktranslate with name=client_name asvar page_subtitle %}Thank you, {{ name }}! Your food court reservations have been submitted.{% endblocktranslate %}
+{% include 'core/_page_header.html' with title=page_title subtitle=page_subtitle %}
+
+<div class="detail-panel mb-4">
+    <dl class="detail-grid mb-4">
+        <div class="detail-item">
+            <dt>{% translate "Client name" %}</dt>
+            <dd>{{ client_name }}</dd>
+        </div>
+        <div class="detail-item">
+            <dt>{% translate "Phone number" %}</dt>
+            <dd>{{ client_phone }}</dd>
+        </div>
+    </dl>
+
+    <h2 class="h5 mb-3">{% translate "Your orders" %}</h2>
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th scope="col">{% translate "Food" %}</th>
+                    <th scope="col">{% translate "Restaurant" %}</th>
+                    <th scope="col">{% translate "Portions" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reservation in reservations %}
+                    <tr>
+                        <td>
+                            {% if reservation.offer %}
+                                {{ reservation.offer.name }}
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ reservation.restaurant.name }}</td>
+                        <td>{{ reservation.portions_reserved }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="action-bar">
+    <a class="btn btn-brand" href="{% url 'offers:list' %}">
+        {% translate "Browse more offers" %}
+    </a>
+    <a class="btn btn-outline-secondary" href="{% url 'offers:list' %}">
+        {% translate "Back to offers" %}
+    </a>
+</div>
+{% endblock %}

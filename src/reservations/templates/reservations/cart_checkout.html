@@ -1,0 +1,48 @@
+{% extends 'core/base.html' %}
+{% load i18n core_tags %}
+
+{% block title %}{% translate "Checkout" %} — {% translate "Foodie" %}{% endblock %}
+
+{% block content %}
+{% translate "Checkout" as page_title %}
+{% translate "Enter your details once to reserve all items in your cart." as page_subtitle %}
+{% include 'core/_page_header.html' with title=page_title subtitle=page_subtitle %}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="form-panel">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% include 'core/_form_fields.html' with form=form %}
+                <div class="form-actions mb-0">
+                    <button type="submit" class="btn btn-brand">
+                        <i class="bi bi-bag-check" aria-hidden="true"></i> {% translate "Confirm all reservations" %}
+                    </button>
+                    <a class="btn btn-outline-secondary" href="{% url 'reservations:cart' %}">
+                        {% translate "Back to cart" %}
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="detail-panel">
+            <h2 class="h5 mb-3">{% translate "Order summary" %}</h2>
+            <ul class="list-unstyled mb-0">
+                {% for item in cart_items %}
+                    <li class="d-flex justify-content-between gap-3 py-2 border-bottom">
+                        <span>
+                            <strong>{{ item.offer.name }}</strong>
+                            <span class="d-block small text-muted">{{ item.offer.restaurant.name }}</span>
+                        </span>
+                        <span class="text-nowrap">
+                            {{ item.portions }} × {{ item.offer.price|to_decimal }} €
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

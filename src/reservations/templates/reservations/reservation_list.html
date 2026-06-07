@@ -1,23 +1,62 @@
 {% extends 'core/base.html' %}
+{% load i18n roles_tags %}
+{% is_admin request.user as is_admin %}
+
+{% block title %}{% translate "Reservations" %} — {% translate "Foodie" %}{% endblock %}
 
 {% block content %}
-  <h1>Reservations</h1>
+{% translate "Reservations" as page_title %}
+{% translate "Review food court reservations and track their status." as page_subtitle %}
+{% include 'core/_page_header.html' with title=page_title subtitle=page_subtitle %}
 
-  <form method="get" class="mb-3">
+{% if is_admin %}
+<form method="get">
     {% include 'core/_filters.html' %}
-  </form>
+</form>
+{% endif %}
 
-  <ul class="list-group">
-    {% for reservation in page_obj.object_list %}
-      <li class="list-group-item">
-        <a href="{% url 'reservations:detail' id=reservation.id %}">{{ reservation.client_name }}</a>
-        — {{ reservation.reservation_status }}
-      </li>
-    {% empty %}
-      <li class="list-group-item">No reservations found.</li>
-    {% endfor %}
-  </ul>
+{% if page_obj.object_list %}
+    <div class="table-panel card-panel">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th scope="col">{% translate "Client" %}</th>
+                    <th scope="col">{% translate "Restaurant" %}</th>
+                    <th scope="col">{% translate "Phone" %}</th>
+                    <th scope="col">{% translate "Offer" %}</th>
+                    <th scope="col">{% translate "Portions" %}</th>
+                    <th scope="col">{% translate "Status" %}</th>
+                    <th scope="col">{% translate "Created" %}</th>
+                    <th scope="col"><span class="visually-hidden">{% translate "Actions" %}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reservation in page_obj.object_list %}
+                    <tr>
+                        <td>{{ reservation.client_name }}</td>
+                        <td>{{ reservation.restaurant.name }}</td>
+                        <td>{% if reservation.client_phone %}{{ reservation.client_phone }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                        <td>{% if reservation.offer %}{{ reservation.offer.name }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                        <td>{{ reservation.portions_reserved }}</td>
+                        <td>{% include 'core/_status_badge.html' with status=reservation.reservation_status label=reservation.get_reservation_status_display %}</td>
+                        <td>{{ reservation.created_at|date:"SHORT_DATETIME_FORMAT" }}</td>
+                        <td>
+                            <a class="btn btn-sm btn-outline-brand" href="{% url 'reservations:detail' id=reservation.id %}">
+                                {% translate "Open" %}
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state">
+        <i class="bi bi-calendar-x fs-1 d-block mb-3" aria-hidden="true"></i>
+        <h2 class="h5">{% translate "No reservations found" %}</h2>
+        <p>{% translate "Try adjusting your filters or wait for new reservations." %}</p>
+    </div>
+{% endif %}
 
-  {% include 'core/_paginator.html' with page_obj=page_obj querystring=querystring %}
-
+{% include 'core/_paginator.html' with page_obj=page_obj querystring=querystring %}
 {% endblock %}

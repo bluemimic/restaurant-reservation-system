@@ -1,13 +1,21 @@
 {% extends 'core/base.html' %}
+{% load i18n %}
+
+{% block title %}{% translate "Reserve food" %} — {% translate "Foodie" %}{% endblock %}
 
 {% block content %}
-  <h1>Create reservation</h1>
+{% translate "Reserve food" as page_title %}
+{% translate "Choose an offer, select portions, and reserve your meal for pickup at the food court." as page_subtitle %}
+{% include 'core/_page_header.html' with title=page_title subtitle=page_subtitle %}
 
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {% include 'core/_form_fields.html' with form=form %}
-
-    <button type="submit" class="btn btn-primary">Create</button>
-  </form>
-
+<div class="form-panel">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% include 'core/_form_fields.html' with form=form %}
+        <div class="form-actions mb-0">
+            <button type="submit" class="btn btn-brand">{% translate "Submit reservation" %}</button>
+            <a class="btn btn-outline-secondary" href="{% url 'offers:list' %}">{% translate "Browse offers first" %}</a>
+        </div>
+    </form>
+</div>
 {% endblock %}

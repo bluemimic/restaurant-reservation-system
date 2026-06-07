@@ -1,15 +1,50 @@
 {% extends "core/base.html" %}
+{% load i18n %}
 
-{% block title %}User Detail{% endblock %}
+{% block title %}{{ user.name }} — {% translate "Restaurants" %}{% endblock %}
 
 {% block content %}
-  <h1>User Detail</h1>
-  <div class="card">
-    <div class="card-body">
-      <p><strong>ID:</strong> {{ user.id }}</p>
-      <p><strong>Name:</strong> {{ user.name }}</p>
-      <p><strong>Email:</strong> {{ user.email }}</p>
+{% include 'core/_page_header.html' with title=user.name subtitle=user.email %}
+
+<div class="detail-panel">
+    <dl class="detail-grid">
+        <div class="detail-item">
+            <dt>{% translate "Name" %}</dt>
+            <dd>{{ user.name }}</dd>
+        </div>
+        <div class="detail-item">
+            <dt>{% translate "Email" %}</dt>
+            <dd>{{ user.email }}</dd>
+        </div>
+        <div class="detail-item">
+            <dt>{% translate "Status" %}</dt>
+            <dd>
+                {% if user.is_active %}
+                    <span class="status-badge status-accepted">{% translate "Active" %}</span>
+                {% else %}
+                    <span class="status-badge status-canceled">{% translate "Inactive" %}</span>
+                {% endif %}
+            </dd>
+        </div>
+    </dl>
+
+    <div class="action-bar">
+        <a class="btn btn-outline-secondary" href="{% url 'users:edit' id=user.id %}">
+            {% if is_admin %}
+                {% translate "Edit restaurant" %}
+            {% else %}
+                {% translate "Change password" %}
+            {% endif %}
+        </a>
+        {% if is_admin %}
+            <a class="btn btn-outline-secondary" href="{% url 'users:list' %}">{% translate "Back to list" %}</a>
+            <form method="post" action="{% url 'users:delete' id=user.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger">{% translate "Delete restaurant" %}</button>
+            </form>
+        {% else %}
+            <a class="btn btn-outline-secondary" href="{% url 'offers:list' %}">{% translate "Back to offers" %}</a>
+        {% endif %}
     </div>
-  </div>
-  <a href="{% url 'users:edit' id=user.id %}" class="btn btn-secondary mt-3">Edit</a>
+</div>
 {% endblock %}

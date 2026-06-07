@@ -1,7 +1,106 @@
 {% extends "core/base.html" %}
+{% load i18n roles_tags %}
+{% is_admin request.user as is_admin %}
 
-{% block title %}Home{% endblock %}
+{% block title %}{% translate "Home" %} — {% translate "Foodie" %}{% endblock %}
 
 {% block content %}
-  <h1>HIIIIII!!!!!!<</h1>
+{% if request.user.is_authenticated %}
+    <section id="restaurant-panel" class="restaurant-panel mb-4">
+        <div class="restaurant-panel-header">
+            <div>
+                <p class="text-uppercase fw-semibold text-muted mb-1 small">{% translate "Restaurant panel" %}</p>
+                <h1 class="h3 mb-1">{% translate "Welcome back," %} {{ request.user.name }}</h1>
+                <p class="mb-0 text-muted">
+                    {% translate "Manage your offers and prepare customer orders from one place." %}
+                </p>
+            </div>
+        </div>
+
+        <div class="panel-grid">
+            <a class="panel-card" href="{% url 'offers:list' %}">
+                <i class="bi bi-tag panel-icon" aria-hidden="true"></i>
+                <strong>{% translate "My offers" %}</strong>
+                <span>{% translate "View and edit your published meal deals." %}</span>
+            </a>
+            <a class="panel-card" href="{% url 'offers:create' %}">
+                <i class="bi bi-plus-circle panel-icon" aria-hidden="true"></i>
+                <strong>{% translate "Add offer" %}</strong>
+                <span>{% translate "Publish a new dish with price, portions, and image." %}</span>
+            </a>
+            <a class="panel-card" href="{% url 'reservations:list' %}">
+                <i class="bi bi-calendar-check panel-icon" aria-hidden="true"></i>
+                <strong>{% translate "Reservations" %}</strong>
+                <span>{% translate "Review food reservations and update their status." %}</span>
+            </a>
+            <a class="panel-card" href="{% url 'users:edit' id=request.user.id %}">
+                <i class="bi bi-person-gear panel-icon" aria-hidden="true"></i>
+                <strong>{% translate "Account" %}</strong>
+                <span>{% translate "Update your name or change your password." %}</span>
+            </a>
+            {% if is_admin %}
+                <a class="panel-card" href="{% url 'users:list' %}">
+                    <i class="bi bi-people panel-icon" aria-hidden="true"></i>
+                    <strong>{% translate "Restaurants" %}</strong>
+                    <span>{% translate "Manage restaurant accounts in the system." %}</span>
+                </a>
+            {% endif %}
+        </div>
+    </section>
+{% else %}
+<section class="hero mb-4">
+    <div>
+        <p class="text-uppercase fw-semibold text-muted mb-2">{% translate "Welcome" %}</p>
+        <h1>{% translate "Discover offers and reserve food in minutes." %}</h1>
+        <p class="lead mb-4">
+            {% translate "Browse meal deals from food court restaurants, choose your portions, and reserve food for pickup without creating an account." %}
+        </p>
+        <div class="page-actions mt-0">
+            <a class="btn btn-brand btn-lg" href="{% url 'offers:list' %}">
+                <i class="bi bi-search" aria-hidden="true"></i> {% translate "Browse offers" %}
+            </a>
+            <a class="btn btn-outline-brand btn-lg" href="{% url 'reservations:cart' %}">
+                <i class="bi bi-cart" aria-hidden="true"></i> {% translate "View cart" %}
+            </a>
+        </div>
+    </div>
+
+    <aside class="hero-card">
+        <h2 class="h5">{% translate "How it works" %}</h2>
+        <ol class="mb-0 ps-3">
+            <li>{% translate "Browse available offers from restaurants." %}</li>
+            <li>{% translate "Add food from different places to your cart." %}</li>
+            <li>{% translate "Check out once with your name and phone number." %}</li>
+        </ol>
+    </aside>
+</section>
+
+<section class="stat-grid">
+    <article class="stat-card">
+        <strong><i class="bi bi-tag" aria-hidden="true"></i></strong>
+        <span>{% translate "Daily offers" %}</span>
+        <p class="small text-muted mb-0 mt-2">{% translate "See prices, categories, and remaining portions." %}</p>
+    </article>
+    <article class="stat-card">
+        <strong><i class="bi bi-basket" aria-hidden="true"></i></strong>
+        <span>{% translate "Food reservation" %}</span>
+        <p class="small text-muted mb-0 mt-2">{% translate "Reserve portions in advance and pick up your order at the food court." %}</p>
+    </article>
+    <article class="stat-card">
+        <strong><i class="bi bi-shop" aria-hidden="true"></i></strong>
+        <span>{% translate "Restaurant portal" %}</span>
+        <p class="small text-muted mb-0 mt-2">{% translate "Restaurants can log in to manage offers and reservations." %}</p>
+    </article>
+</section>
+
+<section class="card-panel p-4 mt-4">
+    <h2 class="h5">{% translate "Are you a restaurant?" %}</h2>
+    <p class="mb-3 text-muted">
+        {% translate "Log in with the email and password provided by the food court administrator." %}
+    </p>
+    <a class="btn btn-brand" href="{% url 'authentication:login' %}">
+        {% translate "Restaurant login" %}
+    </a>
+</section>
+{% endif %}
 {% endblock %}
