@@ -1,7 +1,5 @@
 from uuid import UUID
 
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from loguru import logger
@@ -29,19 +27,10 @@ class RestaurantService:
     NOT_FOUND_MESSAGE = _("Restaurant not found.")
     UNIQUE_CONSTRAINT_MESSAGE = _("A restaurant with this email already exists.")
     PASSWORDS_DONT_MATCH = _("Passwords do not match.")
-    PASSWORD_IS_INVALID = _(
-        "Your password must contain at least one digit, one uppercase letter, and one special character."
-    )
 
     def _validate_passwords(self, password: str | None, another_password: str | None) -> None:
         if password is None or password.strip() == "":
             return
-
-        try:
-            validate_password(password)
-        except ValidationError as e:
-            logger.error(f"Password validation failed: {e.messages}")
-            raise ApplicationError(self.PASSWORD_IS_INVALID)
 
         if password != another_password:
             logger.error("Password and confirmation password do not match.")
@@ -87,9 +76,9 @@ class RestaurantService:
         self,
         id: UUID,
         name: str,
-        email: str,
         password: str | None = None,
         another_password: str | None = None,
+        email: str | None = None,
         is_superuser: bool = False,
     ) -> Restaurant:
         self._validate_passwords(password, another_password)
@@ -101,8 +90,10 @@ class RestaurantService:
         logger.debug(f"Editing restaurant ID {restaurant.id} with name: {name}, email: {email}")
 
         restaurant.name = name
-        restaurant.email = email
-        is_superuser = is_superuser
+
+        if has_role(self.performed_by, Administrator):
+            restaurant.email = email
+            restaurant.is_superuser = is_superuser
 
         if password:
             restaurant.set_password(password)
@@ -118,6 +109,10 @@ class RestaurantService:
     @handle_unique_error(str(UNIQUE_CONSTRAINT_MESSAGE))
     @transaction.atomic
     def delete_restaurant(self, id: UUID) -> None:
+        if not has_role(self.performed_by, Administrator):
+            logger.error(f"User {self.performed_by.id} attempted to delete restaurant {id} without permission.")
+            raise PermissionViolationError()
+
         restaurant = get_object_or_raise(Restaurant, self.NOT_FOUND_MESSAGE, id=id)
 
         logger.debug(f"deleting restaurant: {restaurant.id}")

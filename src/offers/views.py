@@ -14,6 +14,7 @@ from src.common.utils import bootstrapify_form, paginate_queryset, prepare_get_p
 from src.common.views import BaseFormView
 from src.core.roles import Administrator, Restaurant
 from src.offers.forms import OfferCreateForm, OfferEditForm
+from src.offers.models import Offer
 from src.offers.selectors import OfferFilterSet, OfferSelectors
 from src.offers.services import OfferService
 
@@ -30,14 +31,32 @@ class OfferListView(HandleErrorsMixin, View):
     template_name = "offers/offer_list.html"
 
     def get(self, request, *args, **kwargs):
+        filters = request.GET.copy()
+        is_own_offers = (
+            request.user.is_authenticated
+            and has_role(request.user, Restaurant)
+            and not has_role(request.user, Administrator)
+        )
+
+        if is_own_offers:
+            filters["restaurant"] = str(request.user.id)
+
         selectors = OfferSelectors()
-        qs = selectors.get_offers(filters=request.GET)
+        qs = selectors.get_offers(filters=filters)
 
         page_obj = paginate_queryset(request, qs, per_page=settings.PAGINATE_BY_DEFAULT)
         querystring = prepare_get_params(request, exclude=["page"])
-        filter_form = bootstrapify_form(OfferFilterSet(request.GET).form)
+        filter_form = bootstrapify_form(OfferFilterSet(data=filters, queryset=Offer.objects.all()).form)
 
-        context = {"page_obj": page_obj, "querystring": querystring, "filter_form": filter_form}
+        if is_own_offers and "restaurant" in filter_form.fields:
+            del filter_form.fields["restaurant"]
+
+        context = {
+            "page_obj": page_obj,
+            "querystring": querystring,
+            "filter_form": filter_form,
+            "is_own_offers": is_own_offers,
+        }
 
         return render(request, self.template_name, context)
 
@@ -123,4 +142,4 @@ class OfferDeleteView(LoginRequiredMixin, RoleBasedAccessMixin, HandleErrorsMixi
         if has_role(request.user, Administrator):
             return redirect("offers:list")
 
-        return redirect("home:index")
+        return redirect("offers:list")

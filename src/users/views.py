@@ -17,9 +17,9 @@ from src.common.mixins import (
 )
 from src.common.utils import bootstrapify_form, paginate_queryset, prepare_get_params
 from src.common.views import BaseFormView
+from src.core.exceptions import PermissionViolationError
 from src.core.roles import Administrator, Restaurant
 from src.users.forms import (
-    UserCreateAdminForm,
     UserCreateForm,
     UserEditAdminForm,
     UserEditForm,
@@ -29,8 +29,6 @@ from src.users.services import RestaurantService
 
 
 def _get_create_form(request) -> Type[BaseForm]:
-    if request.user.is_authenticated and has_role(request.user, Administrator):
-        return UserCreateAdminForm
     return UserCreateForm
 
 
@@ -40,33 +38,27 @@ def _get_edit_form(request) -> Type[BaseForm]:
     return UserEditForm
 
 
-class UserCreateView(RoleBasedAccessMixin, BaseFormView):
+class UserCreateView(LoginRequiredMixin, RoleBasedAccessMixin, BaseFormView):
     template_name = "users/user_create.html"
     required_roles = [Administrator]
-    allow_guests = True
-    success_message = _("User has been successfully created!")
+    allow_guests = False
+    success_message = _("Restaurant has been successfully created!")
 
     def get_form_class(self, request, *args, **kwargs) -> Type[BaseForm]:
         return _get_create_form(request)
 
-    def get_extra_context(self, request, form, *args, **kwargs) -> dict:
-        return {"registration": not request.user.is_authenticated}
-
     def form_valid(self, request, form, *args, **kwargs):
-        user_service = RestaurantService(performed_by=request.user if request.user.is_authenticated else None)
+        user_service = RestaurantService(performed_by=request.user)
 
         user_service.create_restaurant(
             name=form.cleaned_data["name"],
             email=form.cleaned_data["email"],
             password=form.cleaned_data["password"],
             another_password=form.cleaned_data["another_password"],
-            is_superuser=form.cleaned_data.get("is_superuser", False),
+            is_superuser=False,
         )
 
         messages.success(request, self.success_message)
-
-        if not has_role(request.user, Administrator):
-            return redirect("authentication:login")
 
         return redirect("users:list")
 
@@ -74,7 +66,7 @@ class UserCreateView(RoleBasedAccessMixin, BaseFormView):
 class UserEditView(LoginRequiredMixin, RoleBasedAccessMixin, BaseFormView):
     template_name = "users/user_edit.html"
     required_roles = [Administrator, Restaurant]
-    success_message = _("User has been successfully updated!")
+    success_message = _("Account has been successfully updated!")
 
     def get_form_class(self, request, *args, **kwargs):
         return _get_edit_form(request)
@@ -84,20 +76,24 @@ class UserEditView(LoginRequiredMixin, RoleBasedAccessMixin, BaseFormView):
 
         return user_selectors.get_restaurant_by_id(kwargs["id"])
 
+    def get_extra_context(self, request, form, *args, **kwargs) -> dict:
+        return {"is_admin": has_role(request.user, Administrator)}
+
     def form_valid(self, request, form, *args, **kwargs):
         user_service = RestaurantService(performed_by=request.user)
-        user_selectors = RestaurantSelectors(performed_by=request.user)
 
-        user = user_selectors.get_restaurant_by_id(kwargs.get("id"))
+        edit_kwargs = {
+            "id": kwargs.get("id"),
+            "name": form.cleaned_data.get("name"),
+            "password": form.cleaned_data.get("password"),
+            "another_password": form.cleaned_data.get("another_password"),
+        }
 
-        user = user_service.edit_restaurant(
-            id=kwargs.get("id"),
-            name=form.cleaned_data.get("name"),
-            email=form.cleaned_data.get("email"),
-            password=form.cleaned_data.get("password"),
-            another_password=form.cleaned_data.get("another_password"),
-            is_superuser=form.cleaned_data.get("is_superuser", False),
-        )
+        if has_role(request.user, Administrator):
+            edit_kwargs["email"] = form.cleaned_data.get("email")
+            edit_kwargs["is_superuser"] = form.cleaned_data.get("is_superuser", False)
+
+        user = user_service.edit_restaurant(**edit_kwargs)
 
         update_session_auth_hash(request, user)
 
@@ -116,7 +112,17 @@ class UserDetailView(LoginRequiredMixin, RoleBasedAccessMixin, HandleErrorsMixin
         user_selectors = RestaurantSelectors(performed_by=request.user)
         user = user_selectors.get_restaurant_by_id(requested_user_id)
 
-        return render(request, self.template_name, {"user": user})
+        if not has_role(request.user, Administrator) and user.id != request.user.id:
+            raise PermissionViolationError()
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "user": user,
+                "is_admin": has_role(request.user, Administrator),
+            },
+        )
 
 
 class UserListView(LoginRequiredMixin, RoleBasedAccessMixin, HandleErrorsMixin, View):
@@ -138,24 +144,15 @@ class UserListView(LoginRequiredMixin, RoleBasedAccessMixin, HandleErrorsMixin, 
 
 
 class UserDeleteView(LoginRequiredMixin, RoleBasedAccessMixin, HandleErrorsMixin, View):
-    required_roles = [Administrator, Restaurant]
-    success_message = _("User has been successfully deleted!")
+    required_roles = [Administrator]
+    success_message = _("Restaurant has been successfully deleted!")
 
     def post(self, request, *args, **kwargs):
         requested_user_id = kwargs.get("id")
-
-        current_user_id = request.user.id
 
         user_service = RestaurantService(performed_by=request.user)
         user_service.delete_restaurant(requested_user_id)
 
         messages.success(request, self.success_message)
 
-        if has_role(request.user, Administrator):
-            return redirect("users:list")
-
-        if current_user_id == requested_user_id:
-            auth_service = AuthService(request=request)
-            auth_service.logout()
-
-        return redirect("home:index")
+        return redirect("users:list")

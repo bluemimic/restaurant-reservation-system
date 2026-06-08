@@ -1,12 +1,39 @@
 {% extends "core/base.html" %}
+{% load i18n %}
 
-{% block title %}Edit User{% endblock %}
+{% block title %}
+    {% if is_admin %}
+        {% translate "Edit restaurant" %}
+    {% else %}
+        {% translate "Account settings" %}
+    {% endif %}
+     — {% translate "Foodie" %}
+{% endblock %}
 
 {% block content %}
-  <h1>Edit User</h1>
-  <form method="post" novalidate>
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Save</button>
-  </form>
+{% if is_admin %}
+    {% translate "Edit restaurant" as page_title %}
+    {% translate "Update restaurant account details." as page_subtitle %}
+{% else %}
+    {% translate "Account settings" as page_title %}
+    {% translate "Update your name or change your password." as page_subtitle %}
+{% endif %}
+{% include 'core/_page_header.html' with title=page_title subtitle=page_subtitle %}
+
+{% if not is_admin %}
+    <p class="text-muted mb-3">
+        {% translate "Login email:" %} <strong>{{ form.instance.email }}</strong>
+    </p>
+{% endif %}
+
+<div class="form-panel">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% include 'core/_form_fields.html' with form=form %}
+        <div class="form-actions mb-0">
+            <button type="submit" class="btn btn-brand">{% translate "Save changes" %}</button>
+            <a class="btn btn-outline-secondary" href="{% url 'users:detail' id=form.instance.id %}">{% translate "Cancel" %}</a>
+        </div>
+    </form>
+</div>
 {% endblock %}

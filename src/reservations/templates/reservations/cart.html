@@ -1,0 +1,79 @@
+{% extends 'core/base.html' %}
+{% load i18n core_tags %}
+
+{% block title %}{% translate "Your cart" %} — {% translate "Foodie" %}{% endblock %}
+
+{% block content %}
+{% translate "Your cart" as page_title %}
+{% translate "Review your selections from different restaurants before checking out." as page_subtitle %}
+{% include 'core/_page_header.html' with title=page_title subtitle=page_subtitle %}
+
+{% if cart_items %}
+    <div class="table-responsive card-panel mb-4">
+        <table class="table table-align-middle mb-0">
+            <thead>
+                <tr>
+                    <th scope="col">{% translate "Food" %}</th>
+                    <th scope="col">{% translate "Restaurant" %}</th>
+                    <th scope="col">{% translate "Price" %}</th>
+                    <th scope="col">{% translate "Portions" %}</th>
+                    <th scope="col"><span class="visually-hidden">{% translate "Actions" %}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart_items %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'offers:detail' id=item.offer.id %}">{{ item.offer.name }}</a>
+                        </td>
+                        <td>{{ item.offer.restaurant.name }}</td>
+                        <td>{{ item.offer.price|to_decimal }} €</td>
+                        <td>
+                            <form method="post" action="{% url 'reservations:cart_update' id=item.offer.id %}" class="d-flex align-items-center gap-2">
+                                {% csrf_token %}
+                                <label class="visually-hidden" for="portions-{{ item.offer.id }}">{% translate "Portions" %}</label>
+                                <input
+                                    type="number"
+                                    class="form-control form-control-sm"
+                                    style="max-width: 5rem;"
+                                    id="portions-{{ item.offer.id }}"
+                                    name="portions"
+                                    min="1"
+                                    max="{{ item.offer.portions_available }}"
+                                    value="{{ item.portions }}"
+                                    required
+                                >
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">{% translate "Update" %}</button>
+                            </form>
+                        </td>
+                        <td class="text-end">
+                            <form method="post" action="{% url 'reservations:cart_remove' id=item.offer.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    {% translate "Remove" %}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="action-bar">
+        <a class="btn btn-brand" href="{% url 'reservations:cart_checkout' %}">
+            <i class="bi bi-bag-check" aria-hidden="true"></i> {% translate "Checkout" %}
+        </a>
+        <a class="btn btn-outline-secondary" href="{% url 'offers:list' %}">
+            {% translate "Continue shopping" %}
+        </a>
+    </div>
+{% else %}
+    <div class="empty-state">
+        <i class="bi bi-cart fs-1 d-block mb-3" aria-hidden="true"></i>
+        <h2 class="h5">{% translate "Your cart is empty" %}</h2>
+        <p>{% translate "Browse offers and add food from different restaurants to your cart." %}</p>
+        <a class="btn btn-brand" href="{% url 'offers:list' %}">{% translate "Browse offers" %}</a>
+    </div>
+{% endif %}
+{% endblock %}

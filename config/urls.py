@@ -19,16 +19,17 @@ from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
 from django.conf.urls.static import static
 from django.urls import include, path
+from django.views.generic import RedirectView
 
 handler404 = "src.core.views.custom_404"
 handler403 = "src.core.views.custom_403"
 handler500 = "src.core.views.custom_500"
 
 urlpatterns = i18n_patterns(
-    path("", include(("src.home.urls", "home"), namespace="home")),
+    path("", include(("src.offers.urls", "offers"), namespace="offers")),
+    path("offers/", RedirectView.as_view(pattern_name="offers:list", permanent=True)),
     path("i18n/", include("django.conf.urls.i18n")),
     path("auth/", include(("src.authentication.urls", "authentication"), namespace="authentication")),
-    path("offers/", include(("src.offers.urls", "offers"), namespace="offers")),
     path("reservations/", include(("src.reservations.urls", "reservations"), namespace="reservations")),
     path("users/", include(("src.users.urls", "users"), namespace="users")),
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

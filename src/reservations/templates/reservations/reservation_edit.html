@@ -1,13 +1,21 @@
 {% extends 'core/base.html' %}
+{% load i18n %}
+
+{% block title %}{% translate "Edit reservation" %} — {% translate "Foodie" %}{% endblock %}
 
 {% block content %}
-  <h1>Edit reservation</h1>
+{% translate "Edit reservation" as page_title %}
+{% translate "Only reservations still in the created status can be changed." as page_subtitle %}
+{% include 'core/_page_header.html' with title=page_title subtitle=page_subtitle %}
 
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {% include 'core/_form_fields.html' with form=form %}
-
-    <button type="submit" class="btn btn-primary">Save</button>
-  </form>
-
+<div class="form-panel">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% include 'core/_form_fields.html' with form=form %}
+        <div class="form-actions mb-0">
+            <button type="submit" class="btn btn-brand">{% translate "Save changes" %}</button>
+            <a class="btn btn-outline-secondary" href="{% url 'reservations:detail' id=form.instance.id %}">{% translate "Cancel" %}</a>
+        </div>
+    </form>
+</div>
 {% endblock %}

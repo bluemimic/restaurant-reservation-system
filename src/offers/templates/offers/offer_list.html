@@ -1,30 +1,108 @@
 {% extends 'core/base.html' %}
+{% load i18n core_tags %}
+
+{% block title %}{% translate "Foodie" %}{% endblock %}
 
 {% block content %}
-  <h1>Offers</h1>
+{% if not request.user.is_authenticated %}
+    {% include 'offers/_guest_welcome.html' %}
+{% elif is_own_offers %}
+    {% translate "My offers" as page_title %}
+    {% translate "Manage your published meal deals." as page_subtitle %}
+    {% include 'core/_page_header.html' with title=page_title subtitle=page_subtitle %}
+{% else %}
+    {% translate "Offers" as page_title %}
+    {% translate "Browse meal deals and check what is still available." as page_subtitle %}
+    {% include 'core/_page_header.html' with title=page_title subtitle=page_subtitle %}
+{% endif %}
 
-  <form method="get" class="mb-3">
+{% if is_own_offers %}
+    <div class="page-actions mt-0 mb-4">
+        <a class="btn btn-brand" href="{% url 'offers:create' %}">
+            <i class="bi bi-plus-circle" aria-hidden="true"></i> {% translate "Create offer" %}
+        </a>
+    </div>
+{% endif %}
+
+<form method="get">
     {% include 'core/_filters.html' %}
-  </form>
+</form>
 
-  <div class="row">
-    {% for offer in page_obj.object_list %}
-      <div class="col-md-4 mb-3">
-        <div class="card">
-          {% if offer.image %}
-            <img src="{{ offer.image.url }}" class="card-img-top" alt="{{ offer.name }}">
-          {% endif %}
-          <div class="card-body">
-            <h5 class="card-title"><a href="{% url 'offers:detail' id=offer.id %}">{{ offer.name }}</a></h5>
-            <p class="card-text">{{ offer.description|truncatechars:100 }}</p>
-          </div>
-        </div>
-      </div>
-    {% empty %}
-      <p>No offers found.</p>
-    {% endfor %}
-  </div>
+{% if page_obj.object_list %}
+    <div class="row g-4">
+        {% for offer in page_obj.object_list %}
+            <div class="col-md-6 col-lg-4">
+                <article class="card offer-card h-100">
+                    {% if offer.image %}
+                        <img src="{{ offer.image.url }}" class="card-img-top" alt="{{ offer.name }}">
+                    {% else %}
+                        <div class="card-img-top d-flex align-items-center justify-content-center bg-light text-muted" style="height: 180px;">
+                            <i class="bi bi-image fs-1" aria-hidden="true"></i>
+                        </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <div class="offer-meta">
+                            <span class="category-badge">{{ offer.get_category_display }}</span>
+                            <span class="price-tag">{{ offer.price|to_decimal }} €</span>
+                        </div>
+                        <h2 class="h5 card-title mb-1">
+                            <a href="{% url 'offers:detail' id=offer.id %}">{{ offer.name }}</a>
+                        </h2>
+                        <p class="card-text text-muted small mb-2">
+                            {% if offer.description %}
+                                {{ offer.description|truncatechars:120 }}
+                            {% else %}
+                                {% translate "No description provided." %}
+                            {% endif %}
+                        </p>
+                        <p class="small mb-3">
+                            <i class="bi bi-shop" aria-hidden="true"></i>
+                            {{ offer.restaurant.name }}
+                            &middot;
+                            <i class="bi bi-box-seam" aria-hidden="true"></i>
+                            {% blocktranslate with count=offer.portions_available %}
+                                {{ count }} portions left
+                            {% endblocktranslate %}
+                        </p>
+                        <div class="mt-auto d-flex flex-wrap gap-2">
+                            <a class="btn btn-sm btn-outline-brand" href="{% url 'offers:detail' id=offer.id %}">
+                                {% translate "View details" %}
+                            </a>
+                            {% if not is_own_offers and offer.portions_available > 0 %}
+                                <form method="post" action="{% url 'reservations:cart_add' id=offer.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="portions" value="1">
+                                    <input type="hidden" name="next" value="{{ request.path }}">
+                                    <button type="submit" class="btn btn-sm btn-brand">
+                                        {% translate "Add to cart" %}
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <i class="bi bi-basket fs-1 d-block mb-3" aria-hidden="true"></i>
+        <h2 class="h5">{% translate "No offers found" %}</h2>
+        <p>{% translate "Try changing your filters or check back later." %}</p>
+    </div>
+{% endif %}
 
-  {% include 'core/_paginator.html' with page_obj=page_obj querystring=querystring %}
+{% include 'core/_paginator.html' with page_obj=page_obj querystring=querystring %}
 
+{% if not request.user.is_authenticated %}
+    <section class="card-panel p-4 mt-4">
+        <h2 class="h5">{% translate "Are you a restaurant?" %}</h2>
+        <p class="mb-3 text-muted">
+            {% translate "Log in with the email and password provided by the food court administrator." %}
+        </p>
+        <a class="btn btn-brand" href="{% url 'authentication:login' %}">
+            {% translate "Restaurant login" %}
+        </a>
+    </section>
+{% endif %}
 {% endblock %}

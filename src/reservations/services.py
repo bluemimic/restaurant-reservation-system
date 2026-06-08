@@ -96,10 +96,11 @@ class ReservationService:
     def create_reservation(
         self,
         client_name: str,
-        table_number: int,
         restaurant_id: UUID,
         portions_reserved: int,
         offer_id: UUID | None = None,
+        table_number: int | None = None,
+        client_phone: str | None = None,
     ) -> Reservation:
         offer = None
 
@@ -110,10 +111,11 @@ class ReservationService:
             offer.portions_available -= portions_reserved
             offer.save()
 
-        logger.debug(f"Creating reservation for client: {client_name}, table: {table_number}")
+        logger.debug(f"Creating reservation for client: {client_name}")
 
         reservation = Reservation(
             client_name=client_name,
+            client_phone=client_phone,
             table_number=table_number,
             restaurant_id=restaurant_id,
             portions_reserved=portions_reserved,
@@ -125,6 +127,33 @@ class ReservationService:
         logger.info(f"Created reservation ID: {reservation.id}")
 
         return reservation
+
+    @transaction.atomic
+    def checkout_cart(
+        self,
+        client_name: str,
+        client_phone: str,
+        cart_lines: list[tuple[UUID, int]],
+    ) -> list[Reservation]:
+        if not cart_lines:
+            raise ApplicationError(_("Your cart is empty."))
+
+        reservations = []
+
+        for offer_id, portions in cart_lines:
+            offer = get_object_or_raise(Offer, self.OFFER_NOT_FOUND_MESSAGE, id=offer_id)
+            reservation = self.create_reservation(
+                client_name=client_name,
+                client_phone=client_phone,
+                restaurant_id=offer.restaurant_id,
+                portions_reserved=portions,
+                offer_id=offer_id,
+            )
+            reservations.append(reservation)
+
+        logger.info(f"Checked out cart with {len(reservations)} reservation(s) for {client_name}")
+
+        return reservations
 
     @transaction.atomic
     def edit_reservation(

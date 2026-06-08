@@ -1,25 +1,117 @@
 {% extends 'core/base.html' %}
+{% load i18n core_tags %}
+
+{% block title %}{% translate "Reservation" %} — {{ reservation.client_name }}{% endblock %}
 
 {% block content %}
-  <h1>Reservation {{ reservation.id }}</h1>
+{% translate "Reservation details and status management." as page_subtitle %}
+{% include 'core/_page_header.html' with title=reservation.client_name subtitle=page_subtitle %}
 
-  <dl class="row">
-    <dt class="col-sm-3">Client</dt>
-    <dd class="col-sm-9">{{ reservation.client_name }}</dd>
+<div class="detail-panel">
+    <div class="mb-4">
+        {% include 'core/_status_badge.html' with status=reservation.reservation_status label=reservation.get_reservation_status_display %}
+    </div>
 
-    <dt class="col-sm-3">Table</dt>
-    <dd class="col-sm-9">{{ reservation.table_number }}</dd>
+    <dl class="detail-grid">
+        <div class="detail-item">
+            <dt>{% translate "Client name" %}</dt>
+            <dd>{{ reservation.client_name }}</dd>
+        </div>
+        <div class="detail-item">
+            <dt>{% translate "Phone number" %}</dt>
+            <dd>
+                {% if reservation.client_phone %}
+                    {{ reservation.client_phone }}
+                {% else %}
+                    <span class="text-muted">—</span>
+                {% endif %}
+            </dd>
+        </div>
+        {% if reservation.table_number %}
+            <div class="detail-item">
+                <dt>{% translate "Counter number" %}</dt>
+                <dd>{{ reservation.table_number }}</dd>
+            </div>
+        {% endif %}
+        <div class="detail-item">
+            <dt>{% translate "Restaurant" %}</dt>
+            <dd>{{ reservation.restaurant.name }}</dd>
+        </div>
+        <div class="detail-item">
+            <dt>{% translate "Portions reserved" %}</dt>
+            <dd>{{ reservation.portions_reserved }}</dd>
+        </div>
+        <div class="detail-item">
+            <dt>{% translate "Offer" %}</dt>
+            <dd>
+                {% if reservation.offer %}
+                    <a href="{% url 'offers:detail' id=reservation.offer.id %}">{{ reservation.offer.name }}</a>
+                {% else %}
+                    <span class="text-muted">{% translate "No offer selected" %}</span>
+                {% endif %}
+            </dd>
+        </div>
+        <div class="detail-item">
+            <dt>{% translate "Created" %}</dt>
+            <dd>{{ reservation.created_at|date:"SHORT_DATETIME_FORMAT" }}</dd>
+        </div>
+        <div class="detail-item">
+            <dt>{% translate "Last updated" %}</dt>
+            <dd>{{ reservation.updated_at|date:"SHORT_DATETIME_FORMAT" }}</dd>
+        </div>
+        <div class="detail-item">
+            <dt>{% translate "Reference" %}</dt>
+            <dd><code>{{ reservation.id }}</code></dd>
+        </div>
+    </dl>
 
-    <dt class="col-sm-3">Status</dt>
-    <dd class="col-sm-9">{{ reservation.reservation_status }}</dd>
+    {% if reservation.reservation_status == "created" %}
+        <div class="status-actions">
+            <p class="w-100 mb-1 fw-semibold">{% translate "Update status" %}</p>
+            <form method="post" action="{% url 'reservations:status' id=reservation.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="accepted">
+                <button type="submit" class="btn btn-success">{% translate "Accept" %}</button>
+            </form>
+            <form method="post" action="{% url 'reservations:status' id=reservation.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="denied">
+                <button type="submit" class="btn btn-outline-danger">{% translate "Deny" %}</button>
+            </form>
+        </div>
+    {% elif reservation.reservation_status == "accepted" %}
+        <div class="status-actions">
+            <p class="w-100 mb-1 fw-semibold">{% translate "Update status" %}</p>
+            <form method="post" action="{% url 'reservations:status' id=reservation.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="prepared">
+                <button type="submit" class="btn btn-brand">{% translate "Mark as prepared" %}</button>
+            </form>
+        </div>
+    {% elif reservation.reservation_status == "prepared" %}
+        <div class="status-actions">
+            <p class="w-100 mb-1 fw-semibold">{% translate "Update status" %}</p>
+            <form method="post" action="{% url 'reservations:status' id=reservation.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="delivered">
+                <button type="submit" class="btn btn-brand">{% translate "Mark as completed" %}</button>
+            </form>
+        </div>
+    {% endif %}
 
-    <dt class="col-sm-3">Offer</dt>
-    <dd class="col-sm-9">{% if reservation.offer %}{{ reservation.offer.name }}{% else %}-{% endif %}</dd>
-  </dl>
-
-  <a class="btn btn-secondary" href="{% url 'reservations:edit' id=reservation.id %}">Edit</a>
-  <form method="post" action="{% url 'reservations:delete' id=reservation.id %}" style="display:inline">{% csrf_token %}
-    <button type="submit" class="btn btn-danger">Cancel</button>
-  </form>
-
+    <div class="action-bar">
+        {% if reservation.reservation_status == "created" %}
+            <a class="btn btn-outline-secondary" href="{% url 'reservations:edit' id=reservation.id %}">
+                {% translate "Edit reservation" %}
+            </a>
+            <form method="post" action="{% url 'reservations:delete' id=reservation.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger">{% translate "Cancel reservation" %}</button>
+            </form>
+        {% endif %}
+        <a class="btn btn-outline-secondary" href="{% url 'reservations:list' %}">
+            {% translate "Back to reservations" %}
+        </a>
+    </div>
+</div>
 {% endblock %}

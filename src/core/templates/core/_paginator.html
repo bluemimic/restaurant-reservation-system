@@ -1,56 +1,43 @@
-<div id="paginator-wrapper">
-    <ul class="pagination">
+{% load i18n %}
+
+{% if page_obj.has_other_pages %}
+<nav class="mt-4" aria-label="{% translate 'Pagination' %}">
+    <ul class="pagination justify-content-center mb-0">
         {% if page_obj.has_previous %}
-        <li class="page-item">
-            <a class="page-link"
-                hx-get="{% if args %}{% url url args %}{% else %}{% url url %}{% endif %}?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}"
-                hx-target="{{ id }}" hx-swap="outerHTML">
-                <span aria-hidden="true">&laquo;</span>
-            </a>
-        </li>
-        {% else %}
-        <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
-        {% endif %}
-
-        {% if page_obj.number > 3 %}
-            <li class="page-item"><a class="page-link"
-                hx-get="{% if args %}{% url url args %}{% else %}{% url url %}{% endif %}?page=1{% if querystring %}&{{ querystring }}{% endif %}"
-                hx-target="{{ id }}" hx-swap="outerHTML">1</a></li>
-            {% if page_obj.number > 4 %}
-                <li class="page-item disabled"><span class="page-link">...</span></li>
-            {% endif %}
-        {% endif %}
-
-        {% for p in page_obj.paginator.page_range %}
-            {% if p >= page_obj.number|add:"-2" and p <= page_obj.number|add:"2" %}
-                {% if p == page_obj.number %}
-                    <li class="page-item active" aria-current="page"><span class="page-link">{{ p }}</span></li>
-                {% else %}
-                    <li class="page-item"><a class="page-link"
-                        hx-get="{% if args %}{% url url args %}{% else %}{% url url %}{% endif %}?page={{ p }}{% if querystring %}&{{ querystring }}{% endif %}"
-                        hx-target="{{ id }}" hx-swap="outerHTML">{{ p }}</a></li>
-                {% endif %}
-            {% endif %}
-        {% endfor %}
-
-        {% if page_obj.number < page_obj.paginator.num_pages|add:"-2" %}
-            {% if page_obj.number < page_obj.paginator.num_pages|add:"-3" %}
-                <li class="page-item disabled"><span class="page-link">...</span></li>
-            {% endif %}
-            <li class="page-item"><a class="page-link"
-                hx-get="{% if args %}{% url url args %}{% else %}{% url url %}{% endif %}?page={{ page_obj.paginator.num_pages }}{% if querystring %}&{{ querystring }}{% endif %}"
-                hx-target="{{ id }}" hx-swap="outerHTML">{{ page_obj.paginator.num_pages }}</a></li>
-        {% endif %}
-        {% if page_obj.has_next %}
             <li class="page-item">
                 <a class="page-link"
-                    hx-get="{% if args %}{% url url args %}{% else %}{% url url %}{% endif %}?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}"
-                    hx-target="{{ id }}" hx-swap="outerHTML" aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
+                   href="?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}"
+                   aria-label="{% translate 'Previous page' %}">
+                    &laquo; {% translate "Previous" %}
                 </a>
             </li>
         {% else %}
-            <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+            <li class="page-item disabled">
+                <span class="page-link">&laquo; {% translate "Previous" %}</span>
+            </li>
+        {% endif %}
+
+        <li class="page-item disabled">
+            <span class="page-link">
+                {% blocktranslate with current=page_obj.number total=page_obj.paginator.num_pages %}
+                    Page {{ current }} of {{ total }}
+                {% endblocktranslate %}
+            </span>
+        </li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link"
+                   href="?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}"
+                   aria-label="{% translate 'Next page' %}">
+                    {% translate "Next" %} &raquo;
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">{% translate "Next" %} &raquo;</span>
+            </li>
         {% endif %}
     </ul>
-</div>
+</nav>
+{% endif %}

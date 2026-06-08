@@ -13,8 +13,7 @@ from .models import Offer
 
 class OfferFilterSet(FilterSet):
     category = django_filters.ChoiceFilter(choices=Offer.Category.choices)
-    min_price = django_filters.NumberFilter(field_name="price", lookup_expr="gte")
-    max_price = django_filters.NumberFilter(field_name="price", lookup_expr="lte")
+    price = django_filters.RangeFilter(field_name="price", label=_("Price"))
 
     class Meta:
         model = Offer
@@ -22,6 +21,20 @@ class OfferFilterSet(FilterSet):
             "name": ["icontains"],
             "restaurant": ["exact"],
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        restaurant_field = self.form.fields["restaurant"]
+        restaurant_field.label_from_instance = lambda obj: obj.name
+        restaurant_field.queryset = restaurant_field.queryset.filter(is_superuser=False).order_by("name")
+
+        price_field = self.form.fields["price"]
+        for subwidget, placeholder in zip(price_field.widget.widgets, ("min", "max"), strict=True):
+            subwidget.attrs.setdefault("class", "form-control form-control-sm")
+            subwidget.attrs.setdefault("placeholder", placeholder)
+            subwidget.attrs.setdefault("min", "0")
+            subwidget.attrs.setdefault("step", "0.01")
 
 
 class OfferSelectors:
@@ -36,12 +49,6 @@ class OfferSelectors:
         return offer
 
     def get_offers(self, filters: dict | None = None) -> QuerySet[Offer]:
-        """
-        Returns all offers. Pass {"restaurant": <uuid>} in filters to get
-        offers for a specific restaurant.
-        """
         filters = filters or {}
-
         qs = Offer.objects.select_related("restaurant").all()
-
         return OfferFilterSet(data=filters, queryset=qs).qs.order_by("-created_at")

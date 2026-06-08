@@ -59,4 +59,4 @@ class LogoutView(View):
 
         messages.success(request, self.success_message)
 
-        return redirect("home:index")
+        return redirect("offers:list")

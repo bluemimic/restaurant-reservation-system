@@ -22,11 +22,19 @@ class Reservation(BaseModel):
         help_text=_("Name of the client making the reservation"),
     )
 
+    client_phone: models.CharField = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True,
+        verbose_name=_("Phone Number"),
+        help_text=_("Contact phone number for the client"),
+    )
+
     table_number: models.IntegerField = models.IntegerField(
-        null=False,
-        blank=False,
-        verbose_name=_("Table Number"),
-        help_text=_("Number of the table reserved"),
+        null=True,
+        blank=True,
+        verbose_name=_("Counter Number"),
+        help_text=_("Food court counter or stand number for pickup."),
     )
 
     offer: models.ForeignKey = models.ForeignKey(
@@ -66,6 +74,9 @@ class Reservation(BaseModel):
         verbose_name_plural = _("Reservations")
 
         constraints: list[CheckConstraint] = [
-            CheckConstraint(condition=models.Q(table_number__gt=0), name="check_table_number_positive"),
+            CheckConstraint(
+                condition=models.Q(table_number__isnull=True) | models.Q(table_number__gt=0),
+                name="check_table_number_positive",
+            ),
             CheckConstraint(condition=models.Q(portions_reserved__gt=0), name="check_portions_reserved_positive"),
         ]

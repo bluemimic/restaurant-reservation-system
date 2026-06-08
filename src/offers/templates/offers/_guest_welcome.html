@@ -1,0 +1,25 @@
+{% load i18n %}
+
+<section class="hero mb-4">
+    <div>
+        <p class="text-uppercase fw-semibold text-muted mb-2">{% translate "Welcome" %}</p>
+        <h1>{% translate "Discover offers and reserve food in minutes." %}</h1>
+        <p class="lead mb-4">
+            {% translate "Browse meal deals from food court restaurants, choose your portions, and reserve food for pickup without creating an account." %}
+        </p>
+        <div class="page-actions mt-0">
+            <a class="btn btn-outline-brand btn-lg" href="{% url 'reservations:cart' %}">
+                <i class="bi bi-cart" aria-hidden="true"></i> {% translate "View cart" %}
+            </a>
+        </div>
+    </div>
+
+    <aside class="hero-card">
+        <h2 class="h5">{% translate "How it works" %}</h2>
+        <ol class="mb-0 ps-3">
+            <li>{% translate "Browse available offers from restaurants." %}</li>
+            <li>{% translate "Add food from different places to your cart." %}</li>
+            <li>{% translate "Check out once with your name and phone number." %}</li>
+        </ol>
+    </aside>
+</section>

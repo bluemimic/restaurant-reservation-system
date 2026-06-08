@@ -1,21 +1,95 @@
 {% extends 'core/base.html' %}
+{% load i18n core_tags %}
+
+{% block title %}{{ offer.name }} — {% translate "Offers" %}{% endblock %}
 
 {% block content %}
-  <h1>{{ offer.name }}</h1>
+{% include 'core/_page_header.html' with title=offer.name subtitle=offer.restaurant.name %}
 
-  {% if offer.image %}
-    <img src="{{ offer.image.url }}" alt="{{ offer.name }}" class="img-fluid mb-3">
-  {% endif %}
+<div class="row g-4">
+    <div class="col-lg-5">
+        {% if offer.image %}
+            <img src="{{ offer.image.url }}" alt="{{ offer.name }}" class="img-fluid rounded border w-100">
+        {% else %}
+            <div class="empty-state">
+                <i class="bi bi-image fs-1 d-block mb-2" aria-hidden="true"></i>
+                <p class="mb-0">{% translate "No image uploaded" %}</p>
+            </div>
+        {% endif %}
+    </div>
 
-  <p>{{ offer.description }}</p>
-  <p><strong>Price:</strong> {{ offer.price }}</p>
-  <p><strong>Portions available:</strong> {{ offer.portions_available }}</p>
+    <div class="col-lg-7">
+        <div class="detail-panel">
+            <div class="offer-meta mb-3">
+                <span class="category-badge">{{ offer.get_category_display }}</span>
+                <span class="price-tag">{{ offer.price|to_decimal }} €</span>
+            </div>
 
-  {% if user.is_authenticated %}
-    <a class="btn btn-secondary" href="{% url 'offers:edit' id=offer.id %}">Edit</a>
-    <form method="post" action="{% url 'offers:delete' id=offer.id %}" style="display:inline">{% csrf_token %}
-      <button type="submit" class="btn btn-danger">Delete</button>
-    </form>
-  {% endif %}
+            <p class="mb-4">
+                {% if offer.description %}
+                    {{ offer.description }}
+                {% else %}
+                    {% translate "No description provided." %}
+                {% endif %}
+            </p>
 
+            <dl class="detail-grid mb-0">
+                <div class="detail-item">
+                    <dt>{% translate "Restaurant" %}</dt>
+                    <dd>{{ offer.restaurant.name }}</dd>
+                </div>
+                <div class="detail-item">
+                    <dt>{% translate "Portions available" %}</dt>
+                    <dd>{{ offer.portions_available }}</dd>
+                </div>
+                <div class="detail-item">
+                    <dt>{% translate "Category" %}</dt>
+                    <dd>{{ offer.get_category_display }}</dd>
+                </div>
+                <div class="detail-item">
+                    <dt>{% translate "Price" %}</dt>
+                    <dd>{{ offer.price|to_decimal }} €</dd>
+                </div>
+            </dl>
+
+            <div class="action-bar">
+                {% if offer.portions_available > 0 %}
+                    <form method="post" action="{% url 'reservations:cart_add' id=offer.id %}" class="cart-add-form">
+                        {% csrf_token %}
+                        <label class="form-label small" for="cart-portions">{% translate "Portions" %}</label>
+                        <input
+                            type="number"
+                            class="form-control form-control-sm cart-portions-input"
+                            id="cart-portions"
+                            name="portions"
+                            min="1"
+                            max="{{ offer.portions_available }}"
+                            value="1"
+                            required
+                        >
+                        <button type="submit" class="btn btn-brand">
+                            <i class="bi bi-cart-plus" aria-hidden="true"></i> {% translate "Add to cart" %}
+                        </button>
+                    </form>
+                {% else %}
+                    <span class="text-muted">{% translate "Sold out" %}</span>
+                {% endif %}
+                <a class="btn btn-outline-secondary" href="{% url 'offers:list' %}">
+                    {% translate "Back to offers" %}
+                </a>
+                {% if user.is_authenticated %}
+                    <a class="btn btn-outline-secondary" href="{% url 'offers:edit' id=offer.id %}">
+                        {% translate "Edit" %}
+                    </a>
+                    <form method="post" action="{% url 'offers:delete' id=offer.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger">
+                            {% translate "Delete" %}
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

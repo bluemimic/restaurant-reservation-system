@@ -1,0 +1,16 @@
+{% load i18n %}
+{% if status == "delivered" %}
+    <span class="status-badge status-{{ status }}">{% translate "Completed" %}</span>
+{% elif status == "created" %}
+    <span class="status-badge status-{{ status }}">{% translate "Created" %}</span>
+{% elif status == "accepted" %}
+    <span class="status-badge status-{{ status }}">{% translate "Accepted" %}</span>
+{% elif status == "denied" %}
+    <span class="status-badge status-{{ status }}">{% translate "Denied" %}</span>
+{% elif status == "prepared" %}
+    <span class="status-badge status-{{ status }}">{% translate "Prepared" %}</span>
+{% elif status == "canceled" %}
+    <span class="status-badge status-{{ status }}">{% translate "Canceled" %}</span>
+{% else %}
+    <span class="status-badge status-{{ status|default:'' }}">{{ label|default:status }}</span>
+{% endif %}

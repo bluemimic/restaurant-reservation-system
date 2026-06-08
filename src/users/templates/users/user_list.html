@@ -1,45 +1,57 @@
 {% extends "core/base.html" %}
+{% load i18n %}
 
-{% block title %}Users{% endblock %}
+{% block title %}{% translate "Restaurants" %} — {% translate "Foodie" %}{% endblock %}
 
 {% block content %}
-  <h1>Users</h1>
+{% translate "Restaurants" as page_title %}
+{% translate "Manage restaurant accounts in the system." as page_subtitle %}
+{% include 'core/_page_header.html' with title=page_title subtitle=page_subtitle %}
 
-  <table class="table">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Email</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for user in page_obj.object_list %}
-        <tr>
-          <td>{{ user.id }}</td>
-          <td>{{ user.name }}</td>
-          <td>{{ user.email }}</td>
-          <td><a href="{% url 'users:detail' id=user.id %}">View</a></td>
-        </tr>
-      {% empty %}
-        <tr><td colspan="4">No users found.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="page-actions mt-0 mb-4">
+    <a class="btn btn-brand" href="{% url 'users:create' %}">
+        <i class="bi bi-plus-circle" aria-hidden="true"></i> {% translate "Add restaurant" %}
+    </a>
+</div>
 
-  {% if page_obj.has_other_pages %}
-    <nav>
-      <ul class="pagination">
-        {% if page_obj.has_previous %}
-          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
-        {% endif %}
-        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
-        {% if page_obj.has_next %}
-          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
-        {% endif %}
-      </ul>
-    </nav>
-  {% endif %}
+{% if page_obj.object_list %}
+    <div class="table-panel card-panel">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th scope="col">{% translate "Name" %}</th>
+                    <th scope="col">{% translate "Email" %}</th>
+                    <th scope="col">{% translate "Active" %}</th>
+                    <th scope="col"><span class="visually-hidden">{% translate "Actions" %}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in page_obj.object_list %}
+                    <tr>
+                        <td>{{ user.name }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if user.is_active %}
+                                <span class="status-badge status-accepted">{% translate "Active" %}</span>
+                            {% else %}
+                                <span class="status-badge status-canceled">{% translate "Inactive" %}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a class="btn btn-sm btn-outline-brand" href="{% url 'users:detail' id=user.id %}">
+                                {% translate "View" %}
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state">
+        <h2 class="h5">{% translate "No restaurants found" %}</h2>
+    </div>
+{% endif %}
 
+{% include 'core/_paginator.html' with page_obj=page_obj querystring=querystring %}
 {% endblock %}
